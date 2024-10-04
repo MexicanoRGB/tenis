@@ -1,0 +1,256 @@
+
+import greenfoot.*;  // Importa as classes necessárias
+public class MyWorld extends World
+{
+    public MyWorld()
+    {    
+        super(610, 340, 1); // Tamanho do mundo
+        Player player = new Player(); // Cria uma instância do jogador
+        addObject(player, 100, 200); // Adiciona o jogador ao mundo
+        
+        // Adiciona vários inimigos ao mundo
+        
+            Inimigo inimigo = new Inimigo();
+            addObject(inimigo, 500, 200);
+            
+        Bola bola = new Bola();
+        addObject(bola, 300, 170); // Adiciona a bola no centro do mundo
+    }
+}
+
+
+import greenfoot.*;  // Importa as classes necessárias
+
+public class Bola extends Actor
+{
+    private int velocidadeX; // Velocidade no eixo X
+    private int velocidadeY; // Velocidade no eixo Y
+    private int delayColisao = 0; // Delay para evitar colisões múltiplas
+    private GreenfootImage imagemNormal; // Imagem normal da bola
+    private GreenfootImage imagemPlayer; // Imagem ao colidir com o Player
+    private GreenfootImage imagemInimigo; // Imagem ao colidir com o Inimigo
+    public Bola()
+    {
+        // Carregar e ajustar o tamanho das imagens da bola
+        imagemNormal = new GreenfootImage("Bola1.png");
+        imagemNormal.scale(50, 50);
+        
+        imagemPlayer = new GreenfootImage("bola2.png");
+        imagemPlayer.scale(50, 50);
+        
+        imagemInimigo = new GreenfootImage("bola3.png");
+        imagemInimigo.scale(50, 50);
+        
+        // Define a imagem inicial da bola
+        setImage(imagemNormal);
+
+        // Define a velocidade inicial da bola
+        iniciarVelocidade();
+    }
+
+    public void act() 
+    {
+        moverBola();
+        verificarColisoes();
+        verificarParedeEsquerda(); // Verifica se a bola tocou a parede esquerda
+        verificarParedeDireita();  // Verifica se a bola tocou a parede direita
+        if (delayColisao > 0) {
+            delayColisao--; // Reduz o tempo de espera para a próxima colisão
+        }
+    }
+
+    private void iniciarVelocidade()
+    {
+        // Define a velocidade inicial da bola com direção aleatória
+        velocidadeX = Greenfoot.getRandomNumber(2) == 0 ? 4 : -4; // Aleatoriamente +4 ou -4
+        velocidadeY = Greenfoot.getRandomNumber(2) == 0 ? 4 : -4; // Aleatoriamente +4 ou -4
+    }
+
+    private void moverBola()
+    {
+        setLocation(getX() + velocidadeX, getY() + velocidadeY);
+
+        // Verifica colisões com as bordas do mundo e inverte a direção se necessário
+        if (getX() >= getWorld().getWidth() - 1) {
+            velocidadeX = -velocidadeX;
+        }
+        if (getY() <= 0 || getY() >= getWorld().getHeight() - 1) {
+            velocidadeY = -velocidadeY;
+        }
+    }
+
+    // Método para verificar se a bola tocou a parede esquerda
+    private void verificarParedeEsquerda()
+    {
+        if (getX() <= 0) { // Verifica se a bola tocou a borda esquerda
+            // Busca o objeto Player no mundo
+            Player player = (Player) getWorld().getObjects(Player.class).get(0);
+            player.reduzirVida(); // Reduz uma vida do jogador
+            resetarBola(); // Reposiciona a bola no centro
+        }
+    }
+
+    // Método para verificar se a bola tocou a parede direita
+    private void verificarParedeDireita()
+    {
+        // Verifica se a bola tocou ou ultrapassou a borda direita
+        if (getX() >= getWorld().getWidth() - 1) {
+            // Busca o objeto Player no mundo
+            Player player = (Player) getWorld().getObjects(Player.class).get(0);
+            player.aumentarPontos(); // Aumenta a pontuação do jogador
+            resetarBola(); // Reposiciona a bola no centro
+        }
+    }
+    
+    // Método para reposicionar a bola no centro após perder uma vida
+    private void resetarBola()
+    {
+        setLocation(getWorld().getWidth() / 2, getWorld().getHeight() / 2); // Centraliza a bola
+        iniciarVelocidade(); // Redefine a velocidade
+        setImage(imagemNormal);
+    }
+
+    private void verificarColisoes()
+    {
+        if (delayColisao == 0) {
+            // Verifica se colidiu com o Player
+            Player player = (Player) getOneIntersectingObject(Player.class);
+            if (player != null && estaProximo(player)) {
+                velocidadeX = -velocidadeX;
+                setImage(imagemPlayer); // Troca a imagem da bola ao colidir com o player
+                delayColisao = 10; // Define um tempo de espera para evitar colisões repetidas
+                return;
+            }
+
+            // Verifica se colidiu com o Inimigo
+            Inimigo inimigo = (Inimigo) getOneIntersectingObject(Inimigo.class);
+            if (inimigo != null && estaProximo(inimigo)) {
+                velocidadeX = -velocidadeX;
+                setImage(imagemInimigo); // Troca a imagem da bola ao colidir com o inimigo
+                delayColisao = 10;
+            }
+        }
+    }
+    private boolean estaProximo(Actor actor)
+    {
+        // Define uma distância mínima para considerar uma colisão
+        int distanciaX = Math.abs(getX() - actor.getX());
+        int distanciaY = Math.abs(getY() - actor.getY());
+        return distanciaX < 30 && distanciaY < 30; // Distância mínima de 30 pixels
+    }
+}
+
+
+
+import greenfoot.*;  // Importa as classes necessárias
+public class Inimigo extends Actor
+{
+    private int velocidade; // Velocidade do inimigo
+    public Inimigo()
+    {
+        // Cria a imagem do inimigo
+        GreenfootImage inimigoImage = new GreenfootImage("raquete 2.png"); // Certifique-se de ter esta imagem
+        inimigoImage.scale(300, 300);
+        setImage(inimigoImage);
+         velocidade = 3;
+    }
+    public void act() 
+    {
+        seguirBola();
+    }
+
+    private void seguirBola()
+    {
+        // Obtém a referência para a bola no mundo
+        Bola bola = (Bola) getWorld().getObjects(Bola.class).get(0);
+
+        // Faz o inimigo se mover na direção da bola no eixo Y (para cima ou para baixo)
+        if (bola.getY() > getY()) {
+            setLocation(getX(), getY() + velocidade); // Move para baixo
+        } else if (bola.getY() < getY()) {
+            setLocation(getX(), getY() - velocidade); // Move para cima
+        }
+    }
+}
+
+import greenfoot.*;  // Importa as classes necessárias
+
+public class Player extends Actor
+{
+    private int vidas; // Quantidade de vidas do jogador
+    private int pontos; // Pontuação do jogador
+
+    public Player()
+    {
+        // Inicializa as vidas com 3
+        vidas = 3;
+        
+        // Cria a imagem do jogador
+        GreenfootImage playerImage = new GreenfootImage("raquete 1.png"); // Certifique-se de ter esta imagem
+        playerImage.scale(250, 250);
+        setImage(playerImage); // Preenche a imagem da raquete
+    }
+
+    public void act() 
+    {
+        movePlayer();
+        verificarGameOver(); // Verifica se o jogador perdeu todas as vidas
+        exibirVidas(); // Exibe as vidas no canto superior esquerdo
+        exibirPontos(); // Exibe os pontos no canto superior direito
+    }
+
+    private void movePlayer()
+    {
+        if (Greenfoot.isKeyDown("right")) // Move para a direita
+        {
+            setLocation(getX() + 5, getY());
+        }
+        if (Greenfoot.isKeyDown("left")) // Move para a esquerda
+        {
+            setLocation(getX() - 5, getY());
+        }
+        if (Greenfoot.isKeyDown("up")) // Move a raquete para cima
+        {
+            setLocation(getX(), getY() - 5);
+        }
+        if (Greenfoot.isKeyDown("down")) // Move a raquete para baixo
+        {
+            setLocation(getX(), getY() + 5);
+        }
+    }
+
+    // Método para reduzir vida do jogador
+    public void reduzirVida() 
+    {
+        vidas--; // Reduz uma vida
+    }
+
+    public void aumentarPontos() 
+    {
+        if (pontos < 10) { // Limita a pontuação a 10
+            pontos++;
+        }
+    }
+    
+    // Verifica se as vidas acabaram e finaliza o jogo
+    private void verificarGameOver()
+    {
+        if (vidas <= 0) 
+        {
+            Greenfoot.stop(); // Para o jogo
+            getWorld().showText("Game Over!", getWorld().getWidth() / 2, getWorld().getHeight() / 2); // Exibe "Game Over" no centro
+        }
+    }
+
+    // Método para exibir o número de vidas no canto superior esquerdo
+    private void exibirVidas()
+    {
+        getWorld().showText("Vidas: " + vidas, 50, 20); // Exibe as vidas no canto superior esquerdo
+    }
+    
+    // Método para exibir o número de pontos no canto superior direito
+    private void exibirPontos()
+    {
+        getWorld().showText("Pontos: " + pontos, getWorld().getWidth() - 100, 20); // Exibe os pontos no canto superior direito
+    }
+}
