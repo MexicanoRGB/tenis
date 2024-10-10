@@ -1,0 +1,21 @@
+#BlueJ class context
+comment0.target=Bola
+comment1.params=
+comment1.target=Bola()
+comment2.params=
+comment2.target=void\ act()
+comment3.params=
+comment3.target=void\ iniciarVelocidade()
+comment4.params=
+comment4.target=void\ moverBola()
+comment5.params=
+comment5.target=void\ verificarParedeEsquerda()
+comment6.params=
+comment6.target=void\ verificarParedeDireita()
+comment7.params=
+comment7.target=void\ verificarColisoes()
+comment8.params=raquete
+comment8.target=boolean\ colisaoComRaquete(greenfoot.Actor)
+comment9.params=
+comment9.target=void\ resetarBola()
+numComments=10
